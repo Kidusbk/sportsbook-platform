@@ -1,0 +1,12 @@
+process.env.NODE_ENV = 'test';
+process.env.JWT_ACCESS_SECRET = 'test-access-secret-minimum-length-for-security';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-minimum-length-for-security';
+process.env.SESSION_SECRET = 'test-session-secret';
+process.env.BCRYPT_ROUNDS = '4';
+process.env.DB_HOST = 'localhost';
+process.env.DB_PORT = '5432';
+process.env.DB_NAME = 'sportsbook_test';
+process.env.DB_USER = 'sportsbook';
+process.env.DB_PASSWORD = 'sportsbook_dev_password';
+process.env.CORS_ORIGINS = 'http://localhost:5173';
+process.env.LOG_LEVEL = 'error';
