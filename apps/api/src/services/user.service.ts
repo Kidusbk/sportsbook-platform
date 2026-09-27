@@ -47,8 +47,9 @@ export const userService = {
     return result.rows[0]?.failed_login_attempts as number;
   },
   async lockAccount(userId: string, durationMinutes: number) {
+    // $1 = durationMinutes (interval duration), $2 = userId (WHERE clause)
     await query(
-      "UPDATE users SET locked_until = NOW() + INTERVAL '1 minute' * $1, updated_at = NOW() WHERE id = $1",
+      "UPDATE users SET locked_until = NOW() + INTERVAL '1 minute' * $1, updated_at = NOW() WHERE id = $2",
       [durationMinutes, userId],
     );
   },
