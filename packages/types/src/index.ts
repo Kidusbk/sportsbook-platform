@@ -89,3 +89,135 @@ export interface RoleWithPermissions extends Role { permissions: Permission[]; }
 
 export const Resource = { USERS: 'users', ROLES: 'roles', PERMISSIONS: 'permissions', AUDIT_LOGS: 'audit_logs' } as const;
 export const Action = { CREATE: 'create', READ: 'read', UPDATE: 'update', DELETE: 'delete', LIST: 'list', MANAGE: 'manage' } as const;
+
+// ---------------------------------------------------------------------------
+// Financial domain types
+// ---------------------------------------------------------------------------
+
+export type WalletStatus = 'active' | 'suspended' | 'closed';
+
+export interface Wallet {
+  id: string;
+  userId: string;
+  /** ISO 4217 three-letter currency code, e.g. 'GBP' */
+  currency: string;
+  status: WalletStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AccountingTransactionType =
+  | 'deposit' | 'withdrawal' | 'bet_stake' | 'bet_payout'
+  | 'bet_refund' | 'bonus' | 'adjustment' | 'hold' | 'hold_release';
+
+export type AccountingTransactionStatus =
+  | 'pending' | 'processing' | 'completed' | 'failed' | 'reversed';
+
+export interface AccountingTransaction {
+  id: string;
+  transactionType: AccountingTransactionType;
+  status: AccountingTransactionStatus;
+  referenceType: string | null;
+  referenceId: string | null;
+  /** Unique key provided by caller to prevent duplicate financial effects */
+  idempotencyKey: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LedgerDirection = 'debit' | 'credit';
+
+export interface LedgerEntry {
+  id: string;
+  walletId: string;
+  accountingTransactionId: string;
+  direction: LedgerDirection;
+  /** Positive integer in minor currency units, e.g. 1050 = £10.50 */
+  amountMinor: bigint;
+  /** ISO 4217 three-letter currency code */
+  currency: string;
+  description: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export type HoldStatus = 'active' | 'released' | 'cancelled' | 'expired';
+export type HoldReason = 'bet_stake' | 'withdrawal' | 'manual';
+
+export interface Hold {
+  id: string;
+  walletId: string;
+  accountingTransactionId: string | null;
+  amountMinor: bigint;
+  currency: string;
+  reason: HoldReason;
+  status: HoldStatus;
+  referenceType: string | null;
+  referenceId: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DepositStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+
+export interface Deposit {
+  id: string;
+  userId: string;
+  walletId: string;
+  accountingTransactionId: string | null;
+  amountMinor: bigint;
+  currency: string;
+  status: DepositStatus;
+  provider: string | null;
+  providerReference: string | null;
+  idempotencyKey: string;
+  metadata: Record<string, unknown> | null;
+  completedAt: string | null;
+  failedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WithdrawalStatus =
+  | 'REQUESTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REJECTED' | 'CANCELLED';
+
+export interface Withdrawal {
+  id: string;
+  userId: string;
+  walletId: string;
+  accountingTransactionId: string | null;
+  holdId: string | null;
+  amountMinor: bigint;
+  currency: string;
+  status: WithdrawalStatus;
+  provider: string | null;
+  providerReference: string | null;
+  idempotencyKey: string;
+  rejectionReason: string | null;
+  metadata: Record<string, unknown> | null;
+  completedAt: string | null;
+  failedAt: string | null;
+  rejectedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Derived balance summary for a wallet.
+ * All values are BIGINT minor units — never floating-point.
+ * Never stored in the database; always computed at query time.
+ */
+export interface BalanceSummary {
+  walletId: string;
+  currency: string;
+  /** SUM(credits) - SUM(debits) from ledger_entries */
+  totalMinor: bigint;
+  /** SUM(amount_minor) from holds WHERE status='active' */
+  reservedMinor: bigint;
+  /** totalMinor - reservedMinor */
+  availableMinor: bigint;
+}
+

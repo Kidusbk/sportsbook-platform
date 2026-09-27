@@ -219,10 +219,55 @@ describe('Migration ownership', () => {
     expect(dropped).toHaveLength(0);
   });
 
+  it('006.down only drops objects owned by 006 (wallets)', () => {
+    const up   = readMigration('006_wallets.up.sql');
+    const down = readMigration('006_wallets.down.sql');
+    const owned = new Set(createdTables(up));
+    for (const t of droppedTables(down)) {
+      expect(owned.has(t), `006.down drops "${t}" not owned by 006`).toBe(true);
+    }
+  });
+
+  it('007.down only drops objects owned by 007 (accounting_transactions)', () => {
+    const up   = readMigration('007_accounting_transactions.up.sql');
+    const down = readMigration('007_accounting_transactions.down.sql');
+    const owned = new Set(createdTables(up));
+    for (const t of droppedTables(down)) {
+      expect(owned.has(t), `007.down drops "${t}" not owned by 007`).toBe(true);
+    }
+  });
+
+  it('008.down only drops objects owned by 008 (ledger_entries)', () => {
+    const up   = readMigration('008_ledger_entries.up.sql');
+    const down = readMigration('008_ledger_entries.down.sql');
+    const owned = new Set(createdTables(up));
+    for (const t of droppedTables(down)) {
+      expect(owned.has(t), `008.down drops "${t}" not owned by 008`).toBe(true);
+    }
+  });
+
+  it('009.down only drops objects owned by 009 (holds)', () => {
+    const up   = readMigration('009_holds.up.sql');
+    const down = readMigration('009_holds.down.sql');
+    const owned = new Set(createdTables(up));
+    for (const t of droppedTables(down)) {
+      expect(owned.has(t), `009.down drops "${t}" not owned by 009`).toBe(true);
+    }
+  });
+
+  it('010.down only drops objects owned by 010 (deposits, withdrawals)', () => {
+    const up   = readMigration('010_deposits_withdrawals.up.sql');
+    const down = readMigration('010_deposits_withdrawals.down.sql');
+    const owned = new Set(createdTables(up));
+    for (const t of droppedTables(down)) {
+      expect(owned.has(t), `010.down drops "${t}" not owned by 010`).toBe(true);
+    }
+  });
+
   it('no down migration drops a table owned by a lower-numbered migration', () => {
-    // Build a map: tableName -> migration number that owns it
+    // Build a map: tableName -> migration number that owns it (all 10 migrations)
     const ownership: Record<string, number> = {};
-    for (const num of [1, 2, 3, 4]) {
+    for (const num of [1, 2, 3, 4, 6, 7, 8, 9, 10]) {
       const prefix = String(num).padStart(3, '0');
       const files = fs.readdirSync(MIGRATIONS_DIR)
         .filter((f) => f.startsWith(prefix) && f.endsWith('.up.sql'));
@@ -234,8 +279,8 @@ describe('Migration ownership', () => {
       }
     }
 
-    // Verify each down file
-    for (const num of [1, 2, 3, 4]) {
+    // Verify each down file across all migrations
+    for (const num of [1, 2, 3, 4, 6, 7, 8, 9, 10]) {
       const prefix = String(num).padStart(3, '0');
       const files = fs.readdirSync(MIGRATIONS_DIR)
         .filter((f) => f.startsWith(prefix) && f.endsWith('.down.sql'));
